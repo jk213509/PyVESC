@@ -35,8 +35,10 @@ class VESCMessage(type):
         cls._field_scalars = []
         for field, idx in zip(cls.fields, range(0, len(cls.fields))):
             cls._field_names.append(field[0])
-            if len(field) >= 3:
+            try:
                 cls._field_scalars.append(field[2])
+            except IndexError:
+                pass
             if field[1] is 's':
                 # string field, add % so we can vary the length
                 cls._fmt_fields += '%u'
@@ -97,13 +99,7 @@ class VESCMessage(type):
     @staticmethod
     def pack(instance, header_only = None):
         if header_only:
-            if instance.can_id is not None:
-                fmt = VESCMessage._endian_fmt + VESCMessage._can_id_fmt + VESCMessage._id_fmt
-                values = (VESCMessage._comm_forward_can, instance.can_id, instance.id)
-            else:
-                fmt = VESCMessage._endian_fmt + VESCMessage._id_fmt
-                values = (instance.id,)
-            return struct.pack(fmt, *values)
+            return struct.pack(VESCMessage._endian_fmt + VESCMessage._id_fmt, instance.id)
 
         field_values = []
         if not instance._field_scalars:
